@@ -22,3 +22,5 @@ vignettes/*.pdf
 #shape files
 sf-tracts/
 BayArea/
+
+.DS_Store
