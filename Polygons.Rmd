@@ -37,7 +37,7 @@ latLong <- function(s,mach,i){
 ## Pull crime location and id from crime.data
 ```{r}
 crime.data.locations <- crime.data[,c("IncidntNum","Location")]
-crime.locations <- data.frame()
+crime.locations <- data.frame(lat=c())
 crime.point.which.tract <- data.frame(tract=c(character()))
 
 latt <- list()
@@ -48,16 +48,12 @@ for(i in 1:length(crime.data.locations$Location)){
     mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", x)
     latt[i] <- latLong(x,mach,1)
     long[i] <- latLong(x,mach,2)
+    #I commented the line below becasue rbind operation is very expensive and this takes over an hour to perform. I was trying to reduce this.
     #crime.locations <- rbind(crime.locations, c(lat,long))
 }
 
-tail(latt)
+# add latt, long, and crime.data.locations$IncidntNum into a data Frame with each as a column to be used later. 
 
-crime.locations <- rbind(crime.locations, lat=latt)
-                         
-crime.locations <- rbind(crime.locations, lon=long)
-
-crime.locations <- rbind(crime.locations, IncidntNum=crime.data.locations$IncidntNum)
 
 #save the file, becasue its expensive to run
 write.csv(crime.locations, "crime-coords.csv", row.names=FALSE)
@@ -66,15 +62,24 @@ write.csv(crime.locations, "crime-coords.csv", row.names=FALSE)
 ## Match crime location to a census tract 
 
 ```{r}
-pol.y = polygon.data@polygons[[196]]@Polygons[[1]]@coords[,1]
-pol.x = polygon.data@polygons[[196]]@Polygons[[1]]@coords[,2]
+#create the 4 vectors needed for the point in func
 
+#total polygons: 197 thats. to get each polygon just need to iterrate through  polygon.data@polygons[[HERE]]
+pol.y = polygon.data@polygons[[196]]@Polygons[[1]]@coords[,1]#lon for polygon 196 
+pol.x = polygon.data@polygons[[196]]@Polygons[[1]]@coords[,2]#lat for polygon 196
+
+#thsi code was set up before I created individual ventors for latt and long in the loop that pulls out teh info. 
 point.y <- crime.locations[,"lon"]
 point.x <- crime.locations[,"lat"]
 
 
+#below this line takes in points and 1 polygon and checks if the points are inside the polygon.
+#returns vector same size as points with 0 if point not in. also each vaule is sent in as a seperate vector.
+#need to itterate through this and add tract number to the point that is in a particular polygon. tract numbers can be found at polygon.data@data$NAME10 upto this point 
 points.in <- point.in.polygon(point.x,point.y,pol.x,pol.y, mode.checked = F)
 
+
+##code below is onlu to plot points and polygon to check that points arw in the polygon selected. points would not plot thogh
 pol.max.lat <- max(pol.x) 
 pol.min.lat <- min(pol.x)
 pol.max.lon <- max(pol.y)
@@ -86,9 +91,8 @@ point.for.plot <- data.frame(crime.points.locations[points.in,])
 
 
 plot(polygon.data@polygons[[196]]@Polygons[[1]]@coords, col = "firebrick", pch = 5)
-
 points(point.for.plot, col = "blue", pch = "*")
-head(crime.locations)
+
 ```
 
 
