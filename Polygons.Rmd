@@ -13,7 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Load data and Libraries
 
 ```{r crime data}
-setwd("/Users/alcidessorto/Documents/My Documents/CST495-dataMining/crimeProject") 
 rm(list=ls())
 library(sp)
 library(rgdal)
