@@ -20,3 +20,7 @@ vignettes/*.pdf
 *.csv
 .DS_Store
 tl_2010_06075_tract10/
+#shape files
+sf-tracts/
+BayArea/
+

@@ -1,0 +1,94 @@
+---
+title: "Add Tract column to crime data"
+author: "Alcides Sorto"
+date: "May 5, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Load data and Libraries
+
+```{r crime data}
+setwd("/Users/alcidessorto/Documents/My Documents/CST495-dataMining/crimeProject") 
+rm(list=ls())
+library(sp)
+library(rgdal)
+library(maps)
+library(raster)
+library(maptools)
+
+crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
+#crime.locations <- read.csv("crime-coords.csv")
+polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
+
+options(digits=16)
+
+latLong <- function(s,mach,i){
+        start <- mach[[1]][i]
+        stop <- start + attr(mach[[1]], "match.length")[i]-1
+        return(as.numeric(substr(s,start, stop)))
+}
+```
+
+## Pull crime location and id from crime.data
+```{r}
+crime.data.locations <- crime.data[,c("IncidntNum","Location")]
+crime.locations <- data.frame()
+crime.point.which.tract <- data.frame(tract=c(character()))
+
+latt <- list()
+long <- list()
+
+for(i in 1:length(crime.data.locations$Location)){
+    x = crime.data.locations$Location[i]
+    mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", x)
+    latt[i] <- latLong(x,mach,1)
+    long[i] <- latLong(x,mach,2)
+    #crime.locations <- rbind(crime.locations, c(lat,long))
+}
+
+tail(latt)
+
+crime.locations <- rbind(crime.locations, lat=latt)
+                         
+crime.locations <- rbind(crime.locations, lon=long)
+
+crime.locations <- rbind(crime.locations, IncidntNum=crime.data.locations$IncidntNum)
+
+#save the file, becasue its expensive to run
+write.csv(crime.locations, "crime-coords.csv", row.names=FALSE)
+```
+
+## Match crime location to a census tract 
+
+```{r}
+pol.y = polygon.data@polygons[[196]]@Polygons[[1]]@coords[,1]
+pol.x = polygon.data@polygons[[196]]@Polygons[[1]]@coords[,2]
+
+point.y <- crime.locations[,"lon"]
+point.x <- crime.locations[,"lat"]
+
+
+points.in <- point.in.polygon(point.x,point.y,pol.x,pol.y, mode.checked = F)
+
+pol.max.lat <- max(pol.x) 
+pol.min.lat <- min(pol.x)
+pol.max.lon <- max(pol.y)
+pol.min.lon <- min(pol.y)
+
+crime.locations[points.in,c("lon","lat")]
+
+point.for.plot <- data.frame(crime.points.locations[points.in,])
+
+
+plot(polygon.data@polygons[[196]]@Polygons[[1]]@coords, col = "firebrick", pch = 5)
+
+points(point.for.plot, col = "blue", pch = "*")
+head(crime.locations)
+```
+
+
