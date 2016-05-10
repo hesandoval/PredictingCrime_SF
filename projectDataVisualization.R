@@ -22,7 +22,19 @@ crime_categories = unique(sf_crime_data$Category)
 barplot(sort(table(sf_crime_data$Category)), las=2, horiz=T, cex.names=.35, cex.axis = .5)
 
 #plot categories of crimes per month per day of the week
-par(mar=c(4, 6, 1, 1)+.1)
+par(cex.axis=1, cex.lab=1, cex.main=1.2, cex.sub=1)
 sapply(months, function(m)
-  barplot(sort(table(sf_crime_data[format(sf_crime_data$Date, "%B") == m,]$Category)), 
+  barplot(table(sf_crime_data[format(sf_crime_data$Date, "%B") == m,]$Category), 
           las=2, horiz=T,cex.names=.35, cex.axis = .5, main = paste("Crime Categories for the", m)))
+
+hours = substr(sf_crime_data$Time, 1,2)
+sf_crime_data$Hour = hours
+hours=unique(hours)
+
+#displays at what time of the day assaults occur
+barplot(table(sf_crime_data[sf_crime_data$Category == "ASSAULT",]$Hour))
+
+#displayes the times when crimes occur given their category
+par(mar=c(3, 3, 2, 1)+.1)
+sapply(crime_categories, function(c)
+  barplot(table(sf_crime_data[sf_crime_data$Category == c,]$Hour), main = paste("Times when", c, "has been reported")))
