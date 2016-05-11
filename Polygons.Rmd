@@ -42,18 +42,28 @@ crime.point.which.tract <- data.frame(tract=c(character()))
 latt <- list()
 long <- list()
 
-for(i in 1:length(crime.data.locations$Location)){
-    x = crime.data.locations$Location[i]
-    mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", x)
-    latt[i] <- latLong(x,mach,1)
-    long[i] <- latLong(x,mach,2)
+res = sapply(crime.data.locations$Location, function(z){
+  mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", z)
+  lat = latLong(z,mach,1)
+  lng = latLong(z,mach,2)
+  return (c(lat,lng))
+})
+res = t(res)
+res = as.data.frame(res)
+crime.data.locations = data.frame(crime.data.locations, res)
+crime.data.locations = crime.data.locations[,c("IncidntNum", "lat","lng")]
+#for(i in 1:length(crime.data.locations$Location)){
+#    x = crime.data.locations$Location[i]
+#    mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", x)
+#    latt[i] <- latLong(x,mach,1)
+#    long[i] <- latLong(x,mach,2)
     #I commented the line below becasue rbind operation is very expensive and this takes over an hour to perform. I was trying to reduce this.
     #crime.locations <- rbind(crime.locations, c(lat,long))
-}
+#}
 
 # add latt, long, and crime.data.locations$IncidntNum into a data Frame with each as a column to be used later. 
 
-
+crime.locations = crime.data.locations
 #save the file, becasue its expensive to run
 write.csv(crime.locations, "crime-coords.csv", row.names=FALSE)
 ```
