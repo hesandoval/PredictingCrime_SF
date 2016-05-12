@@ -24,13 +24,12 @@ crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
 #crime.locations <- read.csv("crime-coords.csv")
 polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
 
+source("functions.r")
+
 options(digits=16)
 
-latLong <- function(s,mach,i){
-        start <- mach[[1]][i]
-        stop <- start + attr(mach[[1]], "match.length")[i]-1
-        return(as.numeric(substr(s,start, stop)))
-}
+names = polygon.data@data$NAME10
+
 ```
 
 ## Pull crime location and id from crime.data
@@ -54,33 +53,18 @@ res = as.data.frame(res)
 crime.data.locations = data.frame(crime.data.locations, res)
 names(crime.data.locations) <- c("IncidntNum","Location","lat","lng")
 crime.data.locations = crime.data.locations[,c("IncidntNum", "lat","lng")]
-#for(i in 1:length(crime.data.locations$Location)){
-#    x = crime.data.locations$Location[i]
-#    mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", x)
-#    latt[i] <- latLong(x,mach,1)
-#    long[i] <- latLong(x,mach,2)
-    #I commented the line below becasue rbind operation is very expensive and this takes over an hour to perform. I was trying to reduce this.
-    #crime.locations <- rbind(crime.locations, c(lat,long))
-#}
-
-# add latt, long, and crime.data.locations$IncidntNum into a data Frame with each as a column to be used later. 
 
 crime.locations <- crime.data.locations[,c("IncidntNum", "lat","lng")]
-#save the file, becasue its expensive to run
-#write.csv(crime.locations, "crime-coords.csv", row.names=FALSE)
+
 ```
 
 ## Match crime location to a census tract 
 
 ```{r}
-#create the 4 vectors needed for the point in func
 
-#thsi code was set up before I created individual ventors for latt and long in the loop that pulls out teh info. 
 point.y <- crime.locations[,"lng"]
 point.x <- crime.locations[,"lat"]
-#total polygons: 197 thats. to get each polygon just need to iterrate through  polygon.data@polygons[[HERE]]
 
-names = polygon.data@data$NAME10
 
 
 points.in <- sapply(polygon.data@polygons, function(poly){
@@ -89,24 +73,18 @@ points.in <- sapply(polygon.data@polygons, function(poly){
   pol.x = poly@Polygons[[1]]@coords[,2]#lat
   
   return(point.in.polygon(point.x,point.y,pol.x,pol.y, mode.checked = F))
-  
-  #yes.v = point.in.polygon(point.x,point.y,pol.x,pol.y, mode.checked = F)
-  
-  #print(yes.v[9901])
-  #break
-  
+
 })
 
-names
+
 
 points.in <- as.data.frame(points.in)
 
 names(points.in) <- names
 
-head(points.in)
+
 
 crime.point.which <- apply(points.in,1,function(x){ x==1} )
-
 
 drop <- apply(points.in, 1, function(x){sum(x)==1})
 
@@ -119,27 +97,8 @@ test <- (names[crime.point.which])
 crime.point.which.tract <- (unlist(apply(crime.point.which,1,function(x){ as.character(names[x]) })))
 
 crime.locations = data.frame(crime.locations,tract= crime.point.which.tract)
-#sumt <- sapply(seq(1,154765,1),function(i){ length(points.in[i,])} )
-#sumt
-#below this line takes in points and 1 polygon and checks if the points are inside the polygon.
-#returns vector same size as points with 0 if point not in. also each vaule is sent in as a seperate vector.
-#need to itterate through this and add tract number to the point that is in a particular polygon. tract numbers can be found at polygon.data@data$NAME10 upto this point 
-#points.in <- point.in.polygon(point.x,point.y,pol.x,pol.y, mode.checked = F)
-
-
-##code below is onlu to plot points and polygon to check that points arw in the polygon selected. points would not plot thogh
-pol.max.lat <- max(pol.x) 
-pol.min.lat <- min(pol.x)
-pol.max.lon <- max(pol.y)
-pol.min.lon <- min(pol.y)
-
-crime.locations[points.in,c("lon","lat")]
-
-point.for.plot <- data.frame(crime.points.locations[points.in,])
-
-
-plot(polygon.data@polygons[[196]]@Polygons[[1]]@coords, col = "firebrick", pch = 5)
-points(point.for.plot, col = "blue", pch = "*")
+crime.locations$lat = NULL
+crime.locations$lng = NULL
 
 ```
 
