@@ -124,9 +124,12 @@ crime.data$Hour = as.numeric(hours)
 
 names(weather.data) = c("TemperatureF", "Conditions" ,  "Humidity"   ,  "Events"   ,    "Date"       ,  "Hour" ) 
 
+
+
 test <- merge(crime.data, weather.data, all.x=T)
 
 test = test[!is.na(test$Humidity),]
+
 
 write.csv(test, "crime_data_final.csv")
 ```
