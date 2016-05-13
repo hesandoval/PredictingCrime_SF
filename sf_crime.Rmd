@@ -197,45 +197,47 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 ```{r}
 #split data confusion matrix, double density plot, when predit name varivles predicted
 
-crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
+crime.data$Hour = as.factor(crime.data$Hour)
+tract = unique(crime.data$Tract)
+single_tract = crime.data[crime.data$Tract == "117",]
+single_tract$output = as.numeric(single_tract$Category == "ROBBERY")
 
 set.seed(123)
 
-data.split = split_data(crime.data)
+data.split = split_data(single_tract)
 
 tr_data = data.split[[1]]
-te_data = data.split[[2]]
+te_dat = data.split[[2]]
 
-fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek + Hour, data = tr_data, family = binomial)
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour, data = tr_data, family = binomial)
 
 
 summary(fit)
 
-predicted = predict(fit, newdata=te_data , type = "response")
+predicted = predict(fit, newdata=te_dat , type = "response")
 
-plot(density(predicted[te_data$output == 0]), col="green", main="Double Density Plot")
-lines(density(predicted[te_data$output == 1]), col="red")
+plot(density(predicted[te_dat$output == 0]), col="green", main="Double Density Plot")
+lines(density(predicted[te_dat$output == 1]), col="red")
+thresh = .05
+abline(v=thresh, lty=2, col="blue")
 
-conf_matrix = table(predicted, te_data$output)
-
+predicted_vals = as.numeric(predicted < thresh)
+actuals = te_dat$output
+conf_matrix = table(actuals, predicted_vals)
+conf_matrix
 ```
 
 ```{r analysis of the model}
 crime_predictions = prediction(predicted, te_dat$output)
 roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
 prec_recall = performance(crime_predictions, measure="prec", x.measure="rec")
+acc_curve = performance(crime_predictions, measure = "acc", x.measure = "cutoff")
 
 
-
+plot(acc_curve, main="Accuracy Threshold Curve")
 plot(prec_recall, main = "Precision Recall Curve")
 plot(roc, main="Receiver Operating Characteristic",col="blue")
-
 ```
-
-
-
-```
-
 
 
 ```{r}
@@ -243,4 +245,3 @@ plot(roc, main="Receiver Operating Characteristic",col="blue")
 
 ```
 
->>>>>>> 006100f600238809c8d9703d74857887aff60d14
