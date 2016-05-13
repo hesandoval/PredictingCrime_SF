@@ -143,9 +143,14 @@ weather.data$Date = as.character(weather.data$Date)
 names(weather.data) = c("TemperatureF", "Conditions" ,  "Humidity"   ,  "Events"   ,    "Date"       ,  "Hour" ) 
 
 crime.data$Date = gsub('([0-9]+)-([0-9]+)-([0-9]+)' , '\\2/\\3/\\1', as.character(crime.data$Date))
+
 test <- merge(crime.data, weather.data, all.x=T)
 
 sum(is.na(test$Humidity))
+
+ta = test[!is.na(test$Humidity),]
+
+write.csv(ta,"crime.data.final.csv")
 
 ```
 
