@@ -18,6 +18,7 @@ library(raster)
 library(maptools)
 library(ggplot2)
 library(ggmap)
+library(ROCR)
 source("functions.r")
 
 
@@ -198,5 +199,19 @@ crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
 
 fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek, data = crime.data, family = binomial)
 
+
 summary(fit)
+```
+
+```{r analysis of the model}
+crime_predictions = prediction(predicted, te_dat$output)
+roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
+prec_recall = performance(crime_predictions, measure="prec", x.measure="rec")
+
+plot(density(predicted[actuals == 0]), col="green", main="Double Density Plot")
+lines(density(predicted[actuals == 1]), col="red")
+
+plot(prec_recall, main = "Precision Recall Curve")
+plot(roc, main="Receiver Operating Characteristic",col="blue")
+
 ```
