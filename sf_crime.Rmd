@@ -109,9 +109,19 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 # Building Model
 
 ```{r}
+#split data confusion matrix, double density plot, when predit name varivles predicted
+
 crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
 
 fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek, data = crime.data, family = binomial)
 
 summary(fit)
 ```
+
+
+
+```{r}
+
+
+```
+
