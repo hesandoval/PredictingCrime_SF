@@ -19,7 +19,7 @@ library(maptools)
 library(ggplot2)
 library(ggmap)
 source("functions.r")
-
+source("lin-regr-util.R")
 
 crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
 polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
@@ -198,9 +198,21 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 
 crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
 
-fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek, data = crime.data, family = binomial)
+set.seed(123)
+
+data.split = split_data(crime.data)
+
+tr_data = data.split[[1]]
+te_data = data.split[[2]]
+
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek + Hour, data = tr_data, family = binomial)
 
 summary(fit)
+
+predicted = predict(fit, newdata=te_data , type = "response")
+
+conf_matrix = table(predicted, te_data$output)
+
 ```
 
 
