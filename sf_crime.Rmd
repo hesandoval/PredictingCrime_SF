@@ -70,9 +70,40 @@ sapply(crime_categories, function(c)
 mean.latitude = mean(crime.data$lat)
 mean.longitude = mean(crime.data$lng)
 
-san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
-san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[as.character(crime.data$Category) == "ROBBERY",c("lat","lng","Category", "DayOfWeek")]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ DayOfWeek) + ggtitle("Locations where robbery was reported by day of the week") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+crimes_split = split(as.character(crime_categories),ceiling(seq_along(as.character(crime_categories))/5))
 
+split1 = unlist(crimes_split[1])
+split2 = unlist(crimes_split[2])
+split3 = unlist(crimes_split[3])
+split4 = unlist(crimes_split[4])
+split5 = unlist(crimes_split[5])
+split6 = unlist(crimes_split[6])
+split7 = unlist(crimes_split[7])
+split8 = unlist(crimes_split[8])
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split1,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split2,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split3,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split4,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split5,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split6,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split7,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split8,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
 ```
 
 # Building Model
@@ -80,6 +111,7 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 ```{r}
 crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
 
-fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek)
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek, data = crime.data, family = binomial)
 
+summary(fit)
 ```
