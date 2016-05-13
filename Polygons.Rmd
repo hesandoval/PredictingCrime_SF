@@ -82,8 +82,6 @@ points.in <- as.data.frame(points.in)
 
 names(points.in) <- names
 
-
-
 crime.point.which <- apply(points.in,1,function(x){ x==1} )
 
 drop <- apply(points.in, 1, function(x){sum(x)==1})
