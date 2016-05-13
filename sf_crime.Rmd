@@ -16,22 +16,102 @@ library(rgdal)
 library(maps)
 library(raster)
 library(maptools)
+library(ggplot2)
+library(ggmap)
 
-crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
-#crime.locations <- read.csv("crime-coords.csv")
+
+
+crime.data <- read.csv("crime_data_final.csv")
 polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
-
-source("functions.r")
-
-options(digits=16)
-
-names = polygon.data@data$NAME10
+polygon.data <- spTransform(polygon.data, CRS("+proj=longlat +datum=WGS84"))
+polygon.data <- fortify(polygon.data)
 ```
 
-You can also embed plots, for example:
+# Data Visualization
 
 ```{r}
+summary(crime.data)
+dates = unlist(lapply(as.character(crime.data$Date), function(x) strsplit(x, "\\s+")[[1]][1]))
+par(mar=c(5,6,3,2))
+crime_dates = as.Date(dates,format = "%m/%d/%Y")
+crime.data$Date = crime_dates
 
+#plots the number of crimes reported per day of the week in jan-dec
+months = unique(format(crime.data$Date, "%B"))
+par(mar=c(5,6,3,2))
+sapply(months, function(m) 
+  barplot(table(format(crime.data$Date[format(crime.data$Date, "%B")==m], "%A")),
+                                   las=2, horiz = T, main = paste("Crime for", m, "by day of the week"), xlab = "Frequency"))
+#default margins
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+
+#plots the categories of crimes
+par(mar=c(4, 6, 1, 1)+.1)
+crime_categories = unique(crime.data$Category)
+
+#plot categories of crimes per month per day of the week
+par(cex.axis=1, cex.lab=1, cex.main=1.2, cex.sub=1)
+sapply(months, function(m)
+  barplot(table(crime.data[format(crime.data$Date, "%B") == m,]$Category), 
+          las=2, horiz=T,cex.names=.35, cex.axis = .5, main = paste("Crime Counts for", m), xlab="Frequency"))
+
+hours = substr(crime.data$Time, 1,2)
+crime.data$Hour = hours
+hours=unique(hours)
+
+
+#displays the times when crimes occur given their category
+par(mar=c(4, 4, 2, 1)+.1)
+sapply(crime_categories, function(c)
+  barplot(table(crime.data[crime.data$Category == c,]$Hour), main = paste("Times when", c, "has been reported"), xlab = "Hour", ylab="Frequency"))
+
+
+
+mean.latitude = mean(crime.data$lat)
+mean.longitude = mean(crime.data$lng)
+
+crimes_split = split(as.character(crime_categories),ceiling(seq_along(as.character(crime_categories))/5))
+
+split1 = unlist(crimes_split[1])
+split2 = unlist(crimes_split[2])
+split3 = unlist(crimes_split[3])
+split4 = unlist(crimes_split[4])
+split5 = unlist(crimes_split[5])
+split6 = unlist(crimes_split[6])
+split7 = unlist(crimes_split[7])
+split8 = unlist(crimes_split[8])
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split1,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split2,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split3,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split4,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split5,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split6,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split7,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
+
+san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
+san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split8,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Building Model
+
+```{r}
+crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
+
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek, data = crime.data, family = binomial)
+
+summary(fit)
+```
