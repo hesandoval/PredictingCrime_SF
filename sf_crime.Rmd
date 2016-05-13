@@ -21,7 +21,7 @@ library(ggmap)
 
 
 
-crime.data <- read.csv("crime.data.final.csv")
+crime.data <- read.csv("crime_data_final.csv")
 polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
 polygon.data <- spTransform(polygon.data, CRS("+proj=longlat +datum=WGS84"))
 polygon.data <- fortify(polygon.data)
@@ -61,9 +61,9 @@ hours=unique(hours)
 
 
 #displays the times when crimes occur given their category
-par(mar=c(3, 3, 2, 1)+.1)
+par(mar=c(4, 4, 2, 1)+.1)
 sapply(crime_categories, function(c)
-  barplot(table(crime.data[crime.data$Category == c,]$Hour), main = paste("Times when", c, "has been reported")), xlab = "Hour", ylab="Frequency")
+  barplot(table(crime.data[crime.data$Category == c,]$Hour), main = paste("Times when", c, "has been reported"), xlab = "Hour", ylab="Frequency"))
 
 
 
@@ -80,6 +80,6 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 ```{r}
 crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
 
-fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + tract + DayOfWeek)
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek)
 
 ```
