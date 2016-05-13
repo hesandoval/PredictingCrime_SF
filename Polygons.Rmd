@@ -56,6 +56,9 @@ crime.data.locations = crime.data.locations[,c("IncidntNum", "lat","lng")]
 
 crime.locations <- crime.data.locations[,c("IncidntNum", "lat","lng")]
 
+
+#write.csv(crime.locations,"crime.loactions.csv")
+
 ```
 
 ## Match crime location to a census tract 
@@ -97,6 +100,18 @@ crime.point.which.tract <- (unlist(apply(crime.point.which,1,function(x){ as.cha
 crime.locations = data.frame(crime.locations,tract= crime.point.which.tract)
 crime.locations$lat = NULL
 crime.locations$lng = NULL
+
+crime.point.which.tract <- as.data.frame(crime.point.which.tract)
+crime.data.locations <- crime.data.locations[drop,]
+crime.data <- crime.data[drop,]
+
+crime.data <- cbind(crime.data,crime.data.locations)
+
+crime.data$Y = NULL
+crime.data$X = NULL
+crime.data$Location = NULL
+
+write.csv(crime.data, "crime.data.csv")
 
 ```
 
