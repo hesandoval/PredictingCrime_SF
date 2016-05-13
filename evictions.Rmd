@@ -28,8 +28,6 @@ polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
 
 names = polygon.data@data$NAME10
 
-
-
 ```
 
 ## Pull latitude and longitude from evictions file
@@ -86,5 +84,6 @@ test <- apply(points.in,1, function(x){sum(x)})
 
 tract.to.evictCount <- data.frame(tract=names,count=test)
 
+write.csv(tract.to.evictCount,"tractToEcivCount.csv", row.names=FALSE)
 ```
 

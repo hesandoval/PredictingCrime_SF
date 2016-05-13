@@ -1,0 +1,51 @@
+---
+title: "Join tract to data"
+author: "Alcides Sorto"
+date: "May 12, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Merge data sources
+
+
+
+```{r }
+rm(list=ls())
+
+options(digits = 16)
+
+crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
+
+tract.data <- read.csv("id_to_tract.csv")
+
+crime.locations <- read.csv("crime.loactions.csv")
+
+
+```
+
+## Merge tract file with crime.data file
+
+
+```{r }
+names(tract.data) <- c("IncidntNum","tract")
+tract.data[,"tract"] <- sapply(tract.data[,"tract"],function(x){ as.character(x) })
+crime.data <- merge(crime.data,tract.data)
+
+write.csv(crime.data,"crime.data.csv")
+```
+
+## Merge lat and lon with crime data
+
+```{r}
+crime.data$X <- NULL
+crime.data$Y <- NULL
+crime.data$Location <- NULL
+
+crime.data <- merge(crime.data,crime.locations)
+
+```
+
