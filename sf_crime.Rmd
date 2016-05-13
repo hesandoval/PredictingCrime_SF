@@ -1,0 +1,37 @@
+---
+title: "Predicting Crime in San Francisco"
+author: "Matt Boensel, Alcides Sorto, Edgar Sandoval"
+date: "May 12, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Reading and Preprocessing Data
+```{r}
+library(sp)
+library(rgdal)
+library(maps)
+library(raster)
+library(maptools)
+
+crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
+#crime.locations <- read.csv("crime-coords.csv")
+polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
+
+source("functions.r")
+
+options(digits=16)
+
+names = polygon.data@data$NAME10
+```
+
+You can also embed plots, for example:
+
+```{r}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
