@@ -197,26 +197,26 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 ```{r}
 #split data confusion matrix, double density plot, when predit name varivles predicted
 
-crime.data$output = as.numeric(crime.data$Category == "ROBBERY")
+crime.data$output = as.numeric(crime.data$Category == "LARCENY/THEFT")
 
 set.seed(123)
 
 data.split = split_data(crime.data)
 
-tr_data = data.split[[1]]
-te_data = data.split[[2]]
+tr_dat = data.split[[1]]
+te_dat = data.split[[2]]
 
-fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek + Hour, data = tr_data, family = binomial)
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek + Hour, data = tr_dat, family = binomial)
 
 
 summary(fit)
 
-predicted = predict(fit, newdata=te_data , type = "response")
+predicted = predict(fit, newdata=te_dat , type = "response")
 
-plot(density(predicted[te_data$output == 0]), col="green", main="Double Density Plot")
-lines(density(predicted[te_data$output == 1]), col="red")
+plot(density(predicted[te_dat$output == 1]), col="green", main="Double Density Plot")
+lines(density(predicted[te_dat$output == 0]), col="red")
 
-conf_matrix = table(predicted, te_data$output)
+conf_matrix = table(predicted, te_dat$output)
 
 ```
 
@@ -243,4 +243,3 @@ plot(roc, main="Receiver Operating Characteristic",col="blue")
 
 ```
 
->>>>>>> 006100f600238809c8d9703d74857887aff60d14
