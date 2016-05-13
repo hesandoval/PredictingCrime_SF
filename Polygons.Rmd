@@ -41,9 +41,6 @@ names = polygon.data@data$NAME10
 ```{r}
 crime.data.locations <- crime.data[,c("Location")]
 
-latt <- list()
-long <- list()
-
 res = sapply(crime.data.locations, function(z){
   mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", z)
   lat = latLong(z,mach,1)
