@@ -20,13 +20,20 @@ library(maps)
 library(raster)
 library(maptools)
 
-crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
+#crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
+crime.data <- read.csv("crime.data.csv")
 #crime.locations <- read.csv("crime-coords.csv")
 polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
+
+weather.data <- read.csv("changed.txt")
+
+
 
 source("functions.r")
 
 options(digits=16)
+
+
 
 names = polygon.data@data$NAME10
 
@@ -105,13 +112,40 @@ crime.point.which.tract <- as.data.frame(crime.point.which.tract)
 crime.data.locations <- crime.data.locations[drop,]
 crime.data <- crime.data[drop,]
 
+crime.data.locations <- crime.data.locations[,c("lat","lng")]
+
 crime.data <- cbind(crime.data,crime.data.locations)
 
 crime.data$Y = NULL
 crime.data$X = NULL
 crime.data$Location = NULL
 
+## Weatter
 write.csv(crime.data, "crime.data.csv")
+
+weather.data <- weather.data[,c("TemperatureF","Conditions","Humidity","Events","date","changedTime")]
+
+weather.data$date <- as.Date(weather.data$date,format="%Y-%m-%d")
+weather.data$date <- format(weather.data$date, "%m/%d/%Y")
+
+dates = unlist(lapply(as.character(crime.data$Date), function(x) strsplit(x, "\\s+")[[1]][1]))
+
+crime_dates = as.Date(dates,format = "%m/%d/%Y")
+crime.data$Date = crime_dates
+
+hours = substr(crime.data$Time, 1,2)
+crime.data$Hour = as.numeric(hours)
+names(weather.data)
+
+crime.data$Date = as.character(crime.data$Date)
+weather.data$Date = as.character(weather.data$Date)
+
+names(weather.data) = c("TemperatureF", "Conditions" ,  "Humidity"   ,  "Events"   ,    "Date"       ,  "Hour" ) 
+
+crime.data$Date = gsub('([0-9]+)-([0-9]+)-([0-9]+)' , '\\2/\\3/\\1', as.character(crime.data$Date))
+test <- merge(crime.data, weather.data, all.x=T)
+
+sum(is.na(test$Humidity))
 
 ```
 
