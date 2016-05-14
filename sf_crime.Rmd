@@ -19,6 +19,8 @@ library(maptools)
 library(ggplot2)
 library(ggmap)
 library(ROCR)
+library(e1071)
+
 source("functions.r")
 source("lin-regr-util.R")
 
@@ -197,7 +199,6 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 ```{r}
 #split data confusion matrix, double density plot, when predit name varivles predicted
 
-crime.data$Hour = as.factor(crime.data$Hour)
 tract = unique(crime.data$Tract)
 single_tract = crime.data[crime.data$Tract == "117",]
 single_tract$output = as.numeric(single_tract$Category == "ROBBERY")
@@ -206,10 +207,12 @@ set.seed(123)
 
 data.split = split_data(single_tract)
 
+
 tr_data = data.split[[1]]
 te_dat = data.split[[2]]
 
 fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour, data = tr_data, family = binomial)
+
 
 
 summary(fit)
@@ -220,6 +223,7 @@ plot(density(predicted[te_dat$output == 0]), col="green", main="Double Density P
 lines(density(predicted[te_dat$output == 1]), col="red")
 thresh = .05
 abline(v=thresh, lty=2, col="blue")
+
 
 predicted_vals = as.numeric(predicted < thresh)
 actuals = te_dat$output
@@ -241,7 +245,14 @@ plot(roc, main="Receiver Operating Characteristic",col="blue")
 
 
 ```{r}
+crime.data$output = NULL
+splits3 = split_data(crime.data)
+tr_dat = splits3[[1]]
+te_dat = splits3[[2]]
 
+fit3 = rpart(Category ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour + Tract, data = tr_dat, method="class")
+summary(fit3)
+prp(fit3, extra = 106, varlen = -10, main="Classification tree for crime fit3", box.col = c("palegreen", "pink")[fit$frame$yval])
 
 ```
 
