@@ -199,23 +199,18 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 ```{r}
 #split data confusion matrix, double density plot, when predit name varivles predicted
 
-tract = unique(crime.data$Tract)
-single_tract = crime.data[crime.data$Tract == "117",]
-single_tract$output = as.numeric(single_tract$Category == "ROBBERY")
 
 set.seed(123)
+crime.data$output =  as.numeric(crime.data$Category == "ROBBERY")
+data.split = split_data(crime.data)
 
-data.split = split_data(single_tract)
 
-
-tr_data = data.split[[1]]
+tr_dat = data.split[[1]]
 te_dat = data.split[[2]]
 
 
-fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour, data = tr_data, family = binomial)
 
-
-
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour, data = tr_dat, family = binomial)
 
 summary(fit)
 
@@ -223,7 +218,7 @@ predicted = predict(fit, newdata=te_dat , type = "response")
 
 plot(density(predicted[te_dat$output == 0]), col="green", main="Double Density Plot")
 lines(density(predicted[te_dat$output == 1]), col="red")
-thresh = .05
+thresh = .025
 abline(v=thresh, lty=2, col="blue")
 
 
@@ -232,9 +227,24 @@ actuals = te_dat$output
 conf_matrix = table(actuals, predicted_vals)
 conf_matrix
 ```
+## Model Analysis
+
+```{r analysis of the model}
+crime_predictions = prediction(predicted, te_dat$output)
+roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
+prec_recall = performance(crime_predictions, measure="prec", x.measure="rec")
+acc_curve = performance(crime_predictions, measure = "acc", x.measure = "cutoff")
+
+
+plot(acc_curve, main="Accuracy Threshold Curve")
+plot(prec_recall, main = "Precision Recall Curve")
+plot(roc, main="Receiver Operating Characteristic",col="blue")
+```
+
+
 ## Naive Bays algorithm
 ```{r}
-
+crime.data$output = NULL
 fit2 = naiveBayes(Category ~ ., data = tr_dat)
 
 predicted2 = predict(fit2, newdata = te_dat)
@@ -258,30 +268,17 @@ names(sort(fit2$tables$Conditions[1,]))
 
 
 
-## Model Analysis
-
-```{r analysis of the model}
-crime_predictions = prediction(predicted, te_dat$output)
-roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
-prec_recall = performance(crime_predictions, measure="prec", x.measure="rec")
-acc_curve = performance(crime_predictions, measure = "acc", x.measure = "cutoff")
-
-
-plot(acc_curve, main="Accuracy Threshold Curve")
-plot(prec_recall, main = "Precision Recall Curve")
-plot(roc, main="Receiver Operating Characteristic",col="blue")
-```
-
-
 ```{r}
-crime.data$output = NULL
-splits3 = split_data(crime.data)
-tr_dat = splits3[[1]]
-te_dat = splits3[[2]]
 
-fit3 = rpart(Category ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour + Tract, data = tr_dat, method="class")
+fit3 = naiveBayes(Tract ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour + Category + PdDistrict , data = tr_dat)
 summary(fit3)
-prp(fit3, extra = 106, varlen = -10, main="Classification tree for crime fit3", box.col = c("palegreen", "pink")[fit$frame$yval])
+actuals = te_dat$Tract
+predicted3 = predict(fit3, newdata = te_dat)
+conf_matrx = table(predicted3, actuals)
+
+mean(predicted3 == actuals)
+
+max(fit3$tables$Category[1,])
 
 ```
 
