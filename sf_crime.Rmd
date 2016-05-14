@@ -19,6 +19,7 @@ library(maptools)
 library(ggplot2)
 library(ggmap)
 library(ROCR)
+library("e1071")
 source("functions.r")
 source("lin-regr-util.R")
 
@@ -206,7 +207,7 @@ data.split = split_data(crime.data)
 tr_dat = data.split[[1]]
 te_dat = data.split[[2]]
 
-fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + Tract + DayOfWeek + Hour, data = tr_dat, family = binomial)
+fit = glm(output ~  ., data = tr_dat, family = binomial)
 
 
 summary(fit)
@@ -219,6 +220,33 @@ lines(density(predicted[te_dat$output == 0]), col="red")
 conf_matrix = table(predicted, te_dat$output)
 
 ```
+## Naive Bays algorithm
+```{r}
+
+fit2 = naiveBayes(Category ~ ., data = tr_dat)
+
+predicted2 = predict(fit2, newdata = te_dat)
+
+conf_matrx = table(predicted2, te_dat$Category)
+
+mean(predicted2 == te_dat$Category)
+
+conf_matrx
+
+par(mar= c(3,10,3,3))
+
+for(i in 1:nrow(fit2$tables$Conditions)){
+
+barplot(sort(fit2$tables$Conditions[,i]), horiz = T, las = 2, main = names(fit2$tables$Conditions[1,][i]) )
+}
+
+names(sort(fit2$tables$Conditions[1,]))
+
+```
+
+
+
+## Model Analysis
 
 ```{r analysis of the model}
 crime_predictions = prediction(predicted, te_dat$output)
