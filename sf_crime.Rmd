@@ -194,21 +194,19 @@ san_fran = qmap(location=c(mean.longitude, mean.latitude), zoom = 13)
 san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..level..), geom ="polygon",data = crime.data[crime.data$Category %in% split8,]) + scale_fill_gradient(low = "yellow", high = "red") + facet_wrap(~ Category) + ggtitle("Locations crimes were reported") + geom_polygon(aes(x=long, y=lat, group=group), fill=NA, size=.2,color='black', data=polygon.data, alpha=.5)
 ```
 
-# Building Model
+# Building Models
 
+## Logistic Regression
 ```{r}
-#split data confusion matrix, double density plot, when predit name varivles predicted
 
+#split data confusion matrix, double density plot, when predit name varivles predicted
 
 set.seed(123)
 crime.data$output =  as.numeric(crime.data$Category == "ROBBERY")
 data.split = split_data(crime.data)
 
-
 tr_dat = data.split[[1]]
 te_dat = data.split[[2]]
-
-
 
 fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour, data = tr_dat, family = binomial)
 
@@ -227,9 +225,9 @@ actuals = te_dat$output
 conf_matrix = table(actuals, predicted_vals)
 conf_matrix
 ```
-## Model Analysis
+### Model Analysis
 
-```{r analysis of the model}
+```{r analysis of the logistic model}
 crime_predictions = prediction(predicted, te_dat$output)
 roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
 prec_recall = performance(crime_predictions, measure="prec", x.measure="rec")
@@ -240,6 +238,7 @@ plot(acc_curve, main="Accuracy Threshold Curve")
 plot(prec_recall, main = "Precision Recall Curve")
 plot(roc, main="Receiver Operating Characteristic",col="blue")
 ```
+
 
 
 ## Naive Bays algorithm
@@ -254,18 +253,18 @@ conf_matrx = table(predicted2, te_dat$Category)
 mean(predicted2 == te_dat$Category)
 
 conf_matrx
-
-par(mar= c(3,10,3,3))
-
-for(i in 1:nrow(fit2$tables$Conditions)){
-
-barplot(sort(fit2$tables$Conditions[,i]), horiz = T, las = 2, main = names(fit2$tables$Conditions[1,][i]) )
-}
-
-names(sort(fit2$tables$Conditions[1,]))
-
 ```
 
+## Visualizing Naive Bayes Results
+
+```{r}
+par(mar= c(5,14,3,3))
+
+for(i in 1:nrow(fit2$tables$Conditions)){
+barplot(sort(fit2$tables$Conditions[,i]), horiz = T, las = 2, main = names(fit2$tables$Conditions[1,][i]), col="firebrick" ,cex.names=0.8, xlab = "Probability")
+}
+
+```
 
 
 ```{r}
