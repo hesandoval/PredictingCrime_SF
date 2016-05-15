@@ -37,10 +37,13 @@ names = polygon.data@data$NAME10
 
 # Preprocessing data
 ## Enriching with Geospacial Data
+The U.S. Census separates cities into tracts, San Francisco has 197. We decided to add these tracts to our data as a feature. To do this we located a shape file containing polygons corrsponding to the census tracts of San Francisco. Then we checked which tract each crime was associated with and added that tract to the row for that crime.
+
 ```{r preprocessing geospacial data, message=FALSE, warning=FALSE}
 #Combining geospacial data
 crime.data.locations <- crime.data[,c("Location")]
 
+#extract higher accuracy geo location from the crime data file
 res = sapply(crime.data.locations, function(z){
   mach <- gregexpr("-?[[:digit:]]+\\.[[:digit:]]+", z)
   lat = latLong(z,mach,1)
@@ -48,6 +51,7 @@ res = sapply(crime.data.locations, function(z){
   return (c(lat,lng))
 })
 
+#prepare points and polygons to match each crime location to a tract.
 res = t(res)
 res = as.data.frame(res)
 crime.data.locations = data.frame(crime.data.locations, res)
@@ -56,20 +60,18 @@ names(crime.data.locations) <- c("Location","lat","lng")
 point.y <- crime.data.locations[,"lng"]
 point.x <- crime.data.locations[,"lat"]
 
+#Mactch crime point to a tract and create a data frame.
 points.in <- sapply(polygon.data@polygons, function(poly){
-  
   pol.y = poly@Polygons[[1]]@coords[,1]#lon
   pol.x = poly@Polygons[[1]]@coords[,2]#lat
-  
   return(point.in.polygon(point.x,point.y,pol.x,pol.y, mode.checked = F))
-
 })
 
 points.in <- as.data.frame(points.in)
 
 names(points.in) <- names
 
-crime.point.which <- apply(points.in,1,function(x){ x==1} )
+crime.point.which <- apply(points.in,1,function(x){ x==1})
 
 drop <- apply(points.in, 1, function(x){sum(x)==1})
 
@@ -79,6 +81,7 @@ crime.point.which = t(crime.point.which)
 
 crime.point.which.tract <- (unlist(apply(crime.point.which,1,function(x){ as.character(names[x]) })))
 
+#Combine tract data to crime data file
 crime.data.locations = data.frame(crime.data.locations,Tract=crime.point.which.tract)
 
 crime.data <- crime.data[drop,]
@@ -91,7 +94,6 @@ crime.data <- data.frame(crime.data,crime.data.locations)
 crime.data$Y = NULL
 crime.data$X = NULL
 crime.data$Location = NULL
-
 ```
 
 ## Enriching with weather data
@@ -251,7 +253,7 @@ plot(roc, main="Receiver Operating Characteristic",col="blue")
 
 
 
-## Naive Bayes algorithm
+## Naive Bayes to classify Categry
 ```{r naive bayes 1, message=FALSE, warning=FALSE}
 crime.data$output = NULL
 
