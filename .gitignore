@@ -1,3 +1,4 @@
+
 # History files
 .Rhistory
 .Rapp.history
@@ -21,10 +22,9 @@ vignettes/*.pdf
 !crime_data_final.csv
 .DS_Store
 tl_2010_06075_tract10/
-#shape files
-sf-tracts/
 BayArea/
 
 .Rproj.user
 ShapefileInterpreter/
 sf_crime.html
+sf_crime_files/

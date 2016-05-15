@@ -197,7 +197,7 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 # Building Models
 
 ## Logistic Regression
-```{r}
+```{r logistic regression, message=FALSE, warning=FALSE}
 
 #split data confusion matrix, double density plot, when predit name varivles predicted
 
@@ -227,7 +227,7 @@ conf_matrix
 ```
 ### Model Analysis
 
-```{r analysis of the logistic model}
+```{r analysis of the logistic model, message=FALSE, warning=FALSE}
 crime_predictions = prediction(predicted, te_dat$output)
 roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
 prec_recall = performance(crime_predictions, measure="prec", x.measure="rec")
@@ -241,9 +241,14 @@ plot(roc, main="Receiver Operating Characteristic",col="blue")
 
 
 
-## Naive Bays algorithm
-```{r}
+## Naive Bayes algorithm
+```{r naive bayes 1, message=FALSE, warning=FALSE}
 crime.data$output = NULL
+data.split = split_data(crime.data)
+
+tr_dat = data.split[[1]]
+te_dat = data.split[[2]]
+
 fit2 = naiveBayes(Category ~ ., data = tr_dat)
 
 predicted2 = predict(fit2, newdata = te_dat)
@@ -257,7 +262,7 @@ conf_matrx
 
 ## Visualizing Naive Bayes Results
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 par(mar= c(5,14,3,3))
 
 for(i in 1:nrow(fit2$tables$Conditions)){
@@ -266,8 +271,8 @@ barplot(sort(fit2$tables$Conditions[,i]), horiz = T, las = 2, main = names(fit2$
 
 ```
 
-
-```{r}
+## Naive Bayes to classify tracts
+```{r naive bayes 2, message=FALSE, warning=FALSE,}
 
 fit3 = naiveBayes(Tract ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour + Category + PdDistrict , data = tr_dat)
 summary(fit3)
