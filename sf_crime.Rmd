@@ -21,6 +21,7 @@ library(ggmap)
 library(ROCR)
 library(e1071)
 
+#setwd("C:/Users/Matthew/Desktop/PredictingCrime_SF-master")
 source("functions.r")
 source("lin-regr-util.R")
 
@@ -244,6 +245,16 @@ plot(roc, main="Receiver Operating Characteristic",col="blue")
 ## Naive Bayes algorithm
 ```{r naive bayes 1, message=FALSE, warning=FALSE}
 crime.data$output = NULL
+
+crime.data$TemperatureF = as.factor(crime.data$TemperatureF) 
+crime.data$lat = as.factor(crime.data$lat)
+crime.data$lng = as.factor(crime.data$lng)
+crime.data$Humidity = as.factor(crime.data$Humidity)
+crime.data$Date = as.factor(crime.data$Date)
+crime.data$Hour = as.factor(crime.data$Hour)
+crime.data$IncidntNum = as.factor(crime.data$IncidntNum)
+crime.data$PdId = as.factor(crime.data$PdId)
+
 data.split = split_data(crime.data)
 
 tr_dat = data.split[[1]]
