@@ -230,9 +230,9 @@ conf_matrix
 
 accuracy = mean(actuals == predicted_vals)
 
-paste("Model Accuracy = ", accuracy)
+paste("Model Accuracy =", accuracy)
 ```
-Our model did not do that great. We got a fairly low accuracy with the threshold we chose and both of the curves on the double density plot had relatively the same shape and size. We believe that the model didn't do so well because our use of the output column was not very approriate. We compared robberies to all other crimes and it is fairly possible that   
+Our model did not do that great. We got a fairly low accuracy with the threshold we chose and both of the curves on the double density plot had relatively the same shape and size. We believe that the model didn't do so well because our use of the output column was not very approriate. We compared robberies to all other crimes, and it is very possible that those other crimes occured under the same circumstances as robberies in San Francisco. We wanted to move forward with this model, but we were unsure of how to create vectors for actual times when no robberies occured. 
 
 
 ### Model Analysis
@@ -275,13 +275,17 @@ predicted2 = predict(fit2, newdata = te_dat)
 
 conf_matrx = table(predicted2, te_dat$Category)
 
-mean(predicted2 == te_dat$Category)
+accuracy = mean(predicted2 == te_dat$Category)
 
 conf_matrx
+
+
+paste("Model accuracy =", accuracy)
 ```
 
 
 ## Naive Bayes to classify tracts
+The final model we wanted to create was a model that classified crimes to a specific census tract. This model would, given a set of features, give a police officer from a given police district, the ability to patrol a tract that could potentially be more prone to the ctime they are looking for. 
 ```{r naive bayes 2, message=FALSE, warning=FALSE,}
 
 fit3 = naiveBayes(Tract ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour + Category + PdDistrict , data = tr_dat)
@@ -290,9 +294,9 @@ actuals = te_dat$Tract
 predicted3 = predict(fit3, newdata = te_dat)
 conf_matrx = table(predicted3, actuals)
 
-mean(predicted3 == actuals)
+accuracy = mean(predicted3 == actuals)
 
-max(fit3$tables$Category[1,])
+paste("Model accuracy =", accuracy)
 
 ```
-
+Once again the accuracy of the model was relatively low. We suspect this score took a hit because the model doesn't take into account that certain police districts would only expect to service a subset of the census tracts, not all of the tracts. Of course, the officers have jursidiction throughout San Francisco, but the majority of their work would lie within their districts. 
