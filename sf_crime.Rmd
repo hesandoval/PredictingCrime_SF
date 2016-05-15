@@ -271,16 +271,6 @@ mean(predicted2 == te_dat$Category)
 conf_matrx
 ```
 
-## Visualizing Naive Bayes Results
-
-```{r, message=FALSE, warning=FALSE}
-par(mar= c(5,14,3,3))
-
-for(i in 1:nrow(fit2$tables$Conditions)){
-barplot(sort(fit2$tables$Conditions[,i]), horiz = T, las = 2, main = names(fit2$tables$Conditions[1,][i]), col="firebrick" ,cex.names=0.8, xlab = "Probability")
-}
-
-```
 
 ## Naive Bayes to classify tracts
 ```{r naive bayes 2, message=FALSE, warning=FALSE,}
