@@ -9,8 +9,12 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Motivation
+For our project, we wanted to determine if there was a viable method to model crime in San Francisco. More specifically, we wanted to see if it was possible to predict where a crime was most likely to occur given geospatial features, time, and weather conditions. Crime can be thought of as an air bubble under a rug. It is easy to smooth out the area, but the bubble will oftentimes simply travel to another side of the rug. With predictive analysis of crime, it is possible to determine where where this bubble will appear before smoothing out the previous bump, and thus get the jump on things. Predicting crime is of great interest to society because even a small reduction in crime can lead to a large increase in quality of life of all effected residents. 
+
 # Reading Data
-For our project we wanted to determine if there was a method to model crime In San Francisco. More specifically we wanted to see if it was possible to predict where a crime was going to occur given geospacial features, time, and weather conditions. Crime can be though of as an air bubble under a rug. It is easy to smooth out the area, but the bubble will often times travel to another side of the rug. With predictive analysis of crime it is possible to determine where where this bubble will appear before smoothing out the previous bump. Crime is a very important thing to predict because even a small reduction in it can lead to a huge increase in quality of life of all of the residents. Below we read in the data and load necesarry libraries and functions. 
+Below we read in the data and load necessary libraries and functions.  Our project drew from several sources in order to obtain the requisite data on weather conditions, type of crime, and geospatial features.  
+
 ```{r reading in data, message=FALSE, warning=FALSE}
 library(sp)
 library(rgdal)
@@ -22,13 +26,12 @@ library(ggmap)
 library(ROCR)
 library(e1071)
 
-#setwd("C:/Users/Matthew/Desktop/PredictingCrime_SF-master")
 source("functions.r")
 source("lin-regr-util.R")
 
 crime.data <- read.csv("SFPD_Incidents_-_Previous_Year__2015_.csv")
 polygon.data <- readOGR(dsn=path.expand("sf-tracts"), layer="sf-tracts")
-weather.data <- read.csv("changed.txt")
+weather.data <- read.csv("weatherData.csv")
 
 options(digits=16)
 names = polygon.data@data$NAME10
@@ -36,11 +39,11 @@ names = polygon.data@data$NAME10
 ```
 
 # Preprocessing data
-## Enriching with Geospacial Data
-The U.S. Census separates cities into tracts, San Francisco has 197. We decided to add these tracts to our data as a feature. To do this we located a shape file containing polygons corrsponding to the census tracts of San Francisco. Then we checked which tract each crime was associated with and added that tract to the row for that crime.
+## Enriching with Geospatial Data
+The U.S. Census separates cities into tracts, of which San Francisco has 197. We decided to add these tracts to our data as a feature. To do this, we located a shape file containing polygons corresponding to the census tracts of San Francisco. Then we determined which tract each crime occurred in and added that data as a feature.
 
-```{r preprocessing geospacial data, message=FALSE, warning=FALSE}
-#Combining geospacial data
+```{r preprocessing geospatial data, message=FALSE, warning=FALSE}
+#Combining geospatial data
 crime.data.locations <- crime.data[,c("Location")]
 
 #extract higher accuracy geo location from the crime data file
@@ -60,7 +63,7 @@ names(crime.data.locations) <- c("Location","lat","lng")
 point.y <- crime.data.locations[,"lng"]
 point.x <- crime.data.locations[,"lat"]
 
-#Mactch crime point to a tract and create a data frame.
+#Match crime point to a tract and create a data frame.
 points.in <- sapply(polygon.data@polygons, function(poly){
   pol.y = poly@Polygons[[1]]@coords[,1]#lon
   pol.x = poly@Polygons[[1]]@coords[,2]#lat
@@ -81,7 +84,7 @@ crime.point.which = t(crime.point.which)
 
 crime.point.which.tract <- (unlist(apply(crime.point.which,1,function(x){ as.character(names[x]) })))
 
-#Combine tract data to crime data file
+#Combine tract data with crime data file
 crime.data.locations = data.frame(crime.data.locations,Tract=crime.point.which.tract)
 
 crime.data <- crime.data[drop,]
@@ -97,30 +100,42 @@ crime.data$Location = NULL
 ```
 
 ## Enriching with weather data
+While there are many websites that offer APIs to obtain historical weather data, we were unable to find one which did so without charging an exorbitant rate.  As such, we had to fall back on screen scraping to obtain the 2015 weather data for San Francisco. Using the Requests Python library, we created a CSV of the year's weather observations taken hourly at San Francisco International Airport (SFO). After some formatting changes, we added several features of interest to our data.  
 ```{r weather data preprocessing, message=FALSE, warning=FALSE}
+
+#Take only temp/humidity/date+time/notable conditions from csv
 weather.data <- weather.data[,c("TemperatureF","Conditions","Humidity","Events","date","changedTime")]
 
+#change date format to m/d/y
 weather.data$date <- as.Date(weather.data$date,format="%Y-%m-%d")
 weather.data$date <- format(weather.data$date, "%m/%d/%Y")
 
+#clean crime.data formatting
 dates = unlist(lapply(as.character(crime.data$Date), function(x) strsplit(x, "\\s+")[[1]][1]))
 
 crime_dates = as.Date(dates,format = "%m/%d/%Y")
 crime.data$Date = format(crime_dates, "%m/%d/%Y")
 
+#remove minutes, as we are pairing rows on the hour
 hours = substr(crime.data$Time, 1,2)
 crime.data$Hour = as.numeric(hours)
 
+#rename columns
 names(weather.data) = c("TemperatureF", "Conditions" ,  "Humidity"   ,  "Events"   ,    "Date"       ,  "Hour" ) 
 
+#perform join on matching features
 test <- merge(crime.data, weather.data, all.x=T)
 
+#discard rows that do not have weather data
 crime.data = test[!is.na(test$Humidity),]
+
 summary(crime.data)
+
 ```
 
-# Data Visualization
-We wanted to examine the categories of crimes across a variety of fractors. Below you will find the distribution of crimes by day of week, month, and hour. The last group of graphs show heatmaps where crimes were committed in San francisco with tract overlays.
+# Data Exploration and Visualization
+We wanted to examine the categories of crimes with regards to a variety of factors. Below you will find the distribution of crimes by day of week, month, and hour. In doing so we hoped to discover trends in when certain crimes occur most often. Following this exploration, we generated heatmaps that display where crimes were committed in San Francisco, with the relevant census tract overlayed.
+
 ```{r data visualization, message=FALSE, warning=FALSE, results="hide"}
 
 polygon.data <- spTransform(polygon.data, CRS("+proj=longlat +datum=WGS84"))
@@ -201,44 +216,53 @@ san_fran + stat_density2d(aes(x = lng, y = lat, fill = ..level.., alpha = ..leve
 # Building Models
 
 ## Logistic Regression
-The first model we built for our project was a logistic regression model. On this model we tried to see if we could determine the probability of a crime occurring. We added a column, output, to crime.data that was a binary indicator variable. We wanted to look specifically at robberies to simplify the model. In the output column, a value of one indicated the category roberry and every other row was given a 0. 
+Our first attempt to model crime utilizes logistic regression. In this model, we explored whether we could accurately predict the occurence of a specific crime type given weather, time, and geospatial features. We added a column, output, to crime.data that was a binary indicator variable. Output = 1 for each row which corresponds to an occurence of our specific type of crime, and 0 otherwise. We chose to first look at robberies, as they are a type of crime that is of particular concern to the typical citizen.
+
 ```{r logistic regression, message=FALSE, warning=FALSE}
 
-#split data confusion matrix, double density plot, when predit name varivles predicted
-
-set.seed(123)
+#create column for output class
 crime.data$output =  as.numeric(crime.data$Category == "ROBBERY")
+
+#split data into training and test sets
+set.seed(123)
 data.split = split_data(crime.data)
 
 tr_dat = data.split[[1]]
 te_dat = data.split[[2]]
 
+#generate model based on weather events, conditions, temp, day, and hour
 fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour, data = tr_dat, family = binomial)
 
 summary(fit)
 
+#make predictions using test data
 predicted = predict(fit, newdata=te_dat , type = "response")
 
+#double density plot
 plot(density(predicted[te_dat$output == 0]), col="green", main="Double Density Plot")
 lines(density(predicted[te_dat$output == 1]), col="red")
 thresh = .025
 abline(v=thresh, lty=2, col="blue")
 
-
 predicted_vals = as.numeric(predicted < thresh)
 actuals = te_dat$output
+
+#generate and display confusion matrix
 conf_matrix = table(actuals, predicted_vals)
+
 conf_matrix
 
 accuracy = mean(actuals == predicted_vals)
 
 paste("Model Accuracy =", accuracy)
 ```
-Our model did not do that great. We got a fairly low accuracy with the threshold we chose and both of the curves on the double density plot had relatively the same shape and size. We believe that the model didn't do so well because our use of the output column was not very approriate. We compared robberies to all other crimes, and it is very possible that those other crimes occured under the same circumstances as robberies in San Francisco. We wanted to move forward with this model, but we were unsure of how to create vectors for actual times when no robberies occured. 
+
+Unfortunately, our model did not do very well. We got a fairly low accuracy with the threshold we chose and both of the curves on the double density plot had relatively the same shape and size. We believe that the model didn't perform well because our methodology may have been a bit too narrow in its focus. We compared robberies to all other crimes, and it is very possible that those other crimes occured under the same circumstances as robberies in San Francisco. Additionally, several other categories seem like they may have characteristics that overlap with robbery, so looking at robberies as a distinct entity is of questionable value. 
 
 
 ### Model Analysis
-The output from the receiver operating characteristic, accuracy threshold, and precision recall curves showed little promise and solidified that our model needed more work.
+The output from the receiver operating characteristic, accuracy threshold, and precision recall curves showed little promise and solidified that our model needed more work. 
+
 ```{r analysis of the logistic model, message=FALSE, warning=FALSE}
 crime_predictions = prediction(predicted, te_dat$output)
 roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
@@ -251,12 +275,75 @@ plot(prec_recall, main = "Precision Recall Curve")
 plot(roc, main="Receiver Operating Characteristic",col="blue")
 ```
 
+### Model Reevaluation
+To move forward with our logistical regression model, we explored considering more category values to be valid occurrences of our target crime.
 
 
-## Naive Bayes to classify Categry
+@Edgar: how do we feel about doing this? larger set of observations that correspond to our output class (50k, so we aren't running into as big an issue as before with almost 40 different output classes), and similar type crimes bucketed together? Wasn't sure what a good thresh value to choose would be. 
+
+```{r logistic regression redux, message=FALSE, warning=FALSE}
+
+#create column for output class
+crime.data$output =  as.numeric(crime.data$Category == "ROBBERY" | crime.data$Category == "BURGLARY" | crime.data$Category == "LARCENY/THEFT")
+
+
+#split data into training and test sets
+set.seed(123)
+data.split = split_data(crime.data)
+
+tr_dat = data.split[[1]]
+te_dat = data.split[[2]]
+
+#generate model based on weather events, conditions, temp, day, and hour
+fit = glm(output ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour, data = tr_dat, family = binomial)
+
+summary(fit)
+
+#make predictions using test data
+predicted = predict(fit, newdata=te_dat , type = "response")
+
+hist(predicted)
+#double density plot
+plot(density(predicted[te_dat$output == 0]), col="green", main="Double Density Plot")
+lines(density(predicted[te_dat$output == 1]), col="red")
+
+#need new threshold
+thresh = .025
+abline(v=thresh, lty=2, col="blue")
+
+
+predicted_vals = as.numeric(predicted < thresh)
+actuals = te_dat$output
+
+#generate and display confusion matrix
+conf_matrix = table(actuals, predicted_vals)
+
+conf_matrix
+
+accuracy = mean(actuals == predicted_vals)
+
+paste("Model Accuracy =", accuracy)
+```
+
+### New Model Analysis
+
+```{r analysis of the logistic model redux, message=FALSE, warning=FALSE}
+crime_predictions = prediction(predicted, te_dat$output)
+roc = performance(crime_predictions, measure = "tpr", x.measure = "fpr")
+prec_recall = performance(crime_predictions, measure="prec", x.measure="rec")
+acc_curve = performance(crime_predictions, measure = "acc", x.measure = "cutoff")
+
+
+plot(acc_curve, main="Accuracy Threshold Curve")
+plot(prec_recall, main = "Precision Recall Curve")
+plot(roc, main="Receiver Operating Characteristic",col="blue")
+```
+
+## Naive Bayes to classify Category
 ```{r naive bayes 1, message=FALSE, warning=FALSE}
 crime.data$output = NULL
 
+#Convert features to factors
 crime.data$TemperatureF = as.factor(crime.data$TemperatureF) 
 crime.data$lat = as.factor(crime.data$lat)
 crime.data$lng = as.factor(crime.data$lng)
@@ -287,7 +374,9 @@ paste("Model accuracy =", accuracy)
 
 
 ## Naive Bayes to classify tracts
-The final model we wanted to create was a model that classified crimes to a specific census tract. This model would, given a set of features, give a police officer from a given police district, the ability to patrol a tract that could potentially be more prone to the ctime they are looking for. 
+
+Our other goal was to create a model that classified crimes based on which census tract it was most likely to present in. This model would, given a set of features, give a police officer from a given police district a notion of which tract to patrol a tract, given that it is potentially more prone to a specific sort of crime. To perform the classification, we used the Naive Bayes functionality of e1071. 
+
 ```{r naive bayes 2, message=FALSE, warning=FALSE,}
 
 fit3 = naiveBayes(Tract ~ Events + Humidity + Conditions + TemperatureF + DayOfWeek + Hour + Category + PdDistrict , data = tr_dat)
